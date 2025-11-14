@@ -1,9 +1,9 @@
 import { useEffect, useReducer, useRef, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
 import { Drawing, GPUBackend, Blueprint, DrawOp, Instances, Texture, Uniforms, Vertices} from 'pinsandcurves-engine';
 import AssetStore from './AssetStore';
+import Controls from './components/Controls';
+import Viewer from './components/Viewer';
+import '@mtrifonov-design/pinsandcurves-design/dist/PinsAndCurvesStylesheet.css';
 
 const assetStore = new AssetStore();
 
@@ -92,22 +92,16 @@ function App() {
 
   return (
     <>
-      <div>
-        <canvas ref={canvasRef} />
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'grid',
+        gridTemplateColumns: '500px 1fr',
+        gridTemplateRows: '1fr',
+      }}>
+        <div><Controls /></div>
+        <div><Viewer /></div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
