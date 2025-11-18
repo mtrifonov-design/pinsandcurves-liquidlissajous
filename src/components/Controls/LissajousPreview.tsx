@@ -41,7 +41,6 @@ function LissajousPreview({ params, stroke = 'black' }: { params: LissajousParam
 }
 
 function LissajousSelectButtonGroup({ options, value, onChange, style = {} }: LissajousButtonGroupProps) {
-  console.log(options, value);
   return (
     <div style={{ 
 

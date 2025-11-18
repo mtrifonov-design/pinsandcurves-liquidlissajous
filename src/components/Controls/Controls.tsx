@@ -1,4 +1,4 @@
-import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
+import { NumberInput, Button, Icon, CollapsibleSection, ColorInput } from '@mtrifonov-design/pinsandcurves-design';
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import hexToRgb, { rgbToHex } from './hexToRgb';
 import LissajousSelectButtonGroup from './LissajousPreview';
@@ -6,53 +6,31 @@ import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from '../../graphics/
 import PresetButton from './PresetButton';
 import presets from '../../graphics/presets';
 import SwitchableSection from './SwitchableSection';
+import useStore from '../../store/useStore';
 
-export default function Component({
-  controls,
-}: { controls: Controls }) {
+export default function Component() {
 
+  const state = useStore(store => store);
+  const update = useStore(store => store.updateStore);
 
-    const state = {
-        particleColors: [],
-        lissajousParams: LISSAJOUS_CURVES[0],
-    }
-
-  const update = (patch: Partial<AdvancedControls>) => {
-    const next = { ...state, ...patch };
-  };
-
-  const updateColor = (idx: number, value: string) => {
+  const updateColor = (idx: number, value: [number, number, number]) => {
     const colors = state.particleColors.slice();
-    colors[idx] = hexToRgb(value) as [number, number, number];
+    colors[idx] = value as [number, number, number];
     update({ particleColors: colors });
   };
 
-    const updateBackgroundColor = (value: string) => {
-    update({ backgroundColor: hexToRgb(value) });
-  };
-
   const addColor = () => update({ particleColors: [...state.particleColors, [255, 255, 255]] });
+
   const removeColor = (idx: number) => {
     if (state.particleColors.length === 1) return;
     update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
-  const updateAnimationSpeed = (speed: number, distance: number) => {
-    const minSpeed = 0.1;
-    const maxFrameLoop = 5000;
-    const adj = (1 / minSpeed) * LISSAJOUS_CURVES_MAX_INTEGRAL / maxFrameLoop;
-
-    const loopLength = distance / (speed * adj);
-    return Math.floor(loopLength);
-  }
-
   const setPreset = (preset: typeof presets[keyof typeof presets]) => {
-    const loopLength = updateAnimationSpeed(preset.animationSpeed, preset.lissajousParams.integral);
-    update({
-      ...preset,
-      loopLifecycle: loopLength,
-    });
-  
+    // update({
+    //   ...preset
+    // });
+    // TODO
   }
 
 
@@ -65,26 +43,20 @@ export default function Component({
         backgroundColor: "var(--gray1)",
         width: '100%',
         height: '100vh',
-        padding: '1rem',
+        padding: '3rem',
         color: 'var(--gray6)',
         overflow: 'scroll',
         scrollbarColor: 'var(--gray3) var(--gray1)',
       }}
     >
-      <h2 style={{
+      <h1 style={{
         color: 'var(--gray7)',
         fontWeight: "normal",
       }}>
-      Liquid Lissajous (Beta)
-      </h2>
+      Liquid Lissajous 
+      </h1>
       <div>
-        Version 0.0.5. <a style={{
-          color: "var(--continuousBlue3)",
-          textDecoration: "underline",
-          cursor: "pointer",
-        }}
-          onClick={() => window.open("https://www.youtube.com/watch?v=ivXyCjc1SoM", "_blank")}
-        >Watch tutorial</a>
+        Version 0.1.0.
       </div>
       <hr></hr>
       Pick a preset to get started 
@@ -120,12 +92,6 @@ export default function Component({
           preset={presets.tropicalDisco}
           onClick={setPreset}
         />
-        {/* <PresetButton
-          label="Pastel Dream"
-          preset={presets.pastelDream}
-          onClick={update}
-        /> */}
-
       </div>
       Customize to your liking
         <CollapsibleSection title="General" iconName="settings">
@@ -175,16 +141,12 @@ export default function Component({
           step={0.1}
           onChange={c => {
             update({ animationSpeed: c })}}
-          onCommit={(c) => {
-            
-            const loopLength = updateAnimationSpeed(c, state.lissajousParams.integral);
-            update({ animationSpeed: c, loopLifecycle: loopLength });
-          }}
         />
       </label>
-      <SwitchableSection label="export perfect loop" activeOnToggled={false}
+      <SwitchableSection label="export perfect loop" 
+          activeOnToggled={false}
           checked={state.exportPerfectLoop}
-          onToggle={(checked) => update({ exportPerfectLoop: checked })}
+          onToggle={(checked : boolean) => update({ exportPerfectLoop: checked })}
         >
         <label style={{
                 display: 'flex',
@@ -198,7 +160,6 @@ export default function Component({
                   min={1}
                   max={30}
                   step={1}
-
                   onCommit={(c) => {
                     update({ exportDuration: c})
                   }}
@@ -207,7 +168,6 @@ export default function Component({
         </SwitchableSection>
       </CollapsibleSection>
       <CollapsibleSection title="Colors" iconName="palette">
-      {/* Global limits */}
       <label style={{
         display: 'flex',
         alignItems: 'center',
@@ -223,7 +183,6 @@ export default function Component({
           onChange={c => update({ mixingIntensity: c })}
         />
       </label>
-      {/* Colours */}
       <fieldset
         style={{
           borderColor: 'var(--gray4)',
@@ -244,7 +203,7 @@ export default function Component({
             border: "1px solid var(--gray3)",
             padding: "0.0rem 0.5rem",
           }}>
-            <input
+            {/* <input
               type="color"
               value={rgbToHex(state.particleColors[i])}
               onChange={e => updateColor(i, e.target.value)}
@@ -255,6 +214,11 @@ export default function Component({
                 width: "35px",
                 height: "35px",
               }}
+            /> */}
+            <ColorInput
+              colorMode="rgb"
+              color={{ r: state.particleColors[i][0], g: state.particleColors[i][1], b: state.particleColors[i][2] }}
+              onChange={color => updateColor(i, [color.r, color.g, color.b])}
             />
             <Icon iconName={"delete"} onClick={() => removeColor(i)} />
           </div>
@@ -262,17 +226,12 @@ export default function Component({
         <Button text={"+ add colour"} onClick={addColor} />
       </fieldset>
       </CollapsibleSection>
-      
-      {/* Advanced Section Toggle Button */}
-      {/* Advanced Section */}
       <CollapsibleSection title="Lissajous Knot" iconName="all_inclusive">
-          {/* Show Lissajous Figure Toggle */}
           <div style={{
               display: "flex",
               flexDirection: "row",
               gap: "1rem",
               padding: "1.5rem",
-              //border: "1px solid var(--gray3)",
               borderWidth: "2px",
               backgroundColor: "var(--gray2)",
               borderRadius: "var(--borderRadiusSmall)",
@@ -293,7 +252,7 @@ export default function Component({
           }}>
             <SwitchableSection label="display lissajous knot" 
               checked={(state.showLissajousFigure)}
-              onToggle={(checked) => update({ showLissajousFigure: checked })}
+              onToggle={(checked : boolean) => update({ showLissajousFigure: checked })}
             >
               <div style={{
                 display: "flex",
@@ -301,15 +260,26 @@ export default function Component({
                 gap: "1rem",
               }}>
             <LissajousSelectButtonGroup
-              value={state.lissajousParams}
+              value={{
+                a: state.a,
+                b: state.b,
+                c: state.c,
+                a_delta: state.a_delta,
+                b_delta: state.b_delta,
+                c_delta: state.c_delta,
+              }}
               options={LISSAJOUS_CURVES.map(curve => ({
                 label: `${curve.a}:${curve.b}`,
                 value: curve,
               }))}
               onChange={(params) => {
-  
-                const loopLength = updateAnimationSpeed(state.animationSpeed, params.integral);
-                update({ lissajousParams: params, loopLifecycle: loopLength,
+                update({
+                  a: params.a,
+                  b: params.b,
+                  c: params.c,
+                  a_delta: params.a_delta,
+                  b_delta: params.b_delta,
+                  c_delta: params.c_delta,
                   rotateHorizontal: 0,
                   rotateVertical: 0,
                  });
