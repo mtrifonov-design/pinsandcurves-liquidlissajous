@@ -1,9 +1,10 @@
-import { lissajousKnot } from '../../graphics/lissajousCurves';
-import type { LissajousParams } from '../../graphics/lissajousCurves';
+import { lissajousKnot } from './lissajousCurves';
+import type { LissajousParams } from './lissajousCurves';
 
 type LissajousOption = {
   label?: string; // optional if you want a tooltip
   value: LissajousParams;
+  integral: number;
 };
 
 type LissajousButtonGroupProps = {
@@ -64,7 +65,7 @@ function LissajousSelectButtonGroup({ options, value, onChange, style = {} }: Li
         return (
           <div
             key={JSON.stringify(opt.value)}
-            onClick={() => onChange(opt.value)}
+            onClick={() => onChange(opt.value, opt.integral)}
             style={{
               border: selected ? '2px solid var(--gray8)' : '2px solid var(--gray4)',
               borderRadius: 4,

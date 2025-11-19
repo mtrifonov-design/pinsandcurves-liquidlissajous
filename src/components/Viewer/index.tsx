@@ -1,9 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import useStore from "../../store/useStore";
 import { Button } from "@mtrifonov-design/pinsandcurves-design";
 import Canvas from "./Canvas";
+import useStore from "../../store/useStore";
+import VideoExporter from "./VideoExporter";
+import computeTotalFrames from "./computeTotalFrames";
+import { FPS } from "../../const";
 
 function Component() {
+
+    const renderingInProgress = useStore((state) => state.renderingInProgress);
+    const [targetRenderFrame, setTargetRenderFrame] = useState<number>(0);
+    const [videoExporter, setVideoExporter] = useState<VideoExporter | null>(null);
+    const setState = useStore((state) => state.updateStore);
+    const state = useStore((state) => state);
+    const totalFrames = computeTotalFrames(state);
+    const exportDurationFactor = state.exportPerfectLoop ? 1 : (state.exportDuration * FPS) / totalFrames;
+    const approxRenderProgress = renderingInProgress ? (targetRenderFrame / totalFrames) / exportDurationFactor : 0;
+
     const w = useStore((state) => state.width);
     const h = useStore((state) => state.height);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -35,7 +48,7 @@ function Component() {
             backgroundColor: '#101214',
             width: '100%',
             height: '100%',
-            padding: '1rem',
+            padding: '2rem',
             overflow: 'hidden',
             display: 'grid',
             gridTemplateRows: 'auto 1fr'
@@ -48,6 +61,17 @@ function Component() {
                 onClick={async () => {
                     //recordEvent({ path: "liquidlissajous-saveframe", event: true });
                     //frameSaver.saveFrame();
+                    setState({ renderingInProgress: true });
+                    const exporter = new VideoExporter(() => {
+                        setState({ renderingInProgress: false });
+                        setVideoExporter(null);
+                        setTargetRenderFrame(0);
+                    });
+                    setVideoExporter(exporter);
+                    exporter.startExport({
+                        width: w,
+                        height: h,
+                    });
                 }}
                 text={"export frame"}
                 iconName="camera"
@@ -74,11 +98,12 @@ function Component() {
         <div
             ref={containerRef}
             style={{
-                width: 'calc(100vw - 700px - 2rem)',
+                width: 'calc(100vw - 700px - 4rem)',
                 height: '100%',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                flexDirection: 'column',
             }}
         >
             <Canvas
@@ -86,7 +111,24 @@ function Component() {
                 scaledHeight={scaledHeight}
                 width={w}
                 height={h}
+                renderObject={
+                    {
+                        renderingInProgress,
+                        targetRenderFrame,
+                        setTargetRenderFrame,
+                        videoExporter,
+                    }
+                }
             />
+            {renderingInProgress && <div style={{
+                    color: 'var(--danger)',
+                    marginTop: '1rem',
+                    fontSize: '1.25rem',
+                    fontWeight: 500,
+                }}>Rendering...
+                {Math.floor(approxRenderProgress * 100)}%
+                </div>}
+
 
         </div>
     </div>;

@@ -1,15 +1,12 @@
 import { create } from "zustand";
+import type { LissajousParams } from "../components/Controls/lissajousCurves";
 
 type StoreState = {
     mixingIntensity: number; 
     particleColors: [number, number, number][]; 
     showLissajousFigure: boolean;
-    a: number;
-    b: number;
-    c: number;
-    a_delta: number;
-    b_delta: number;
-    c_delta: number;
+    lissajousParams: LissajousParams;
+    lissajousIntegral: number;
     width: number; 
     height: number; 
     noiseIntensity: number;
@@ -20,6 +17,8 @@ type StoreState = {
     exportPerfectLoop: boolean; 
     exportDuration: number; 
 
+    renderingInProgress?: boolean;
+
     updateStore: (newState: Partial<StoreState>) => void;
 }
 
@@ -27,12 +26,12 @@ const useStore = create<StoreState>((set) => ({
     mixingIntensity: 0,
     particleColors: [[0, 0, 0]],
     showLissajousFigure: false,
-    a: 0,
-    b: 0,
-    c: 0,
-    a_delta: 0,
-    b_delta: 0,
-    c_delta: 0,
+    lissajousParams: {
+        a: 1, a_delta: 0,
+        b: 1, b_delta: 0,
+        c: 1, c_delta: 0,
+    },
+    lissajousIntegral: 1,
     width: 800,
     height: 600,
     noiseIntensity: 0,
@@ -43,7 +42,11 @@ const useStore = create<StoreState>((set) => ({
     exportPerfectLoop: false,
     exportDuration: 0,
 
+    renderingInProgress: false,
+
     updateStore : (newState: Partial<StoreState>) => set((state) => ({ ...state, ...newState })),
 }));
+
+export type { StoreState };
 
 export default useStore;

@@ -1,25 +1,42 @@
 import { Drawing, GPUBackend, Blueprint, DrawOp, Instances, Texture, Uniforms, Vertices} from 'pinsandcurves-engine';
 import AssetStore from '../../AssetStore';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import useRaf from './useRaf';
 import blueprint from '../../graphics/lissajousRenderer/blueprint';
 import type { GradientRendererProps } from '../../graphics/lissajousRenderer/blueprint';
 import useStore from '../../store/useStore';
+import styles from './Canvas.module.css';
+import type VideoExporter from './VideoExporter';
+import computeTotalFrames from './computeTotalFrames';
+import { FPS } from '../../const';
 
 const assetStore = new AssetStore();
 
-function Canvas({ scaledWidth, scaledHeight, width, height }: { scaledWidth: number, scaledHeight: number, width: number, height: number }) {
+function Canvas({ scaledWidth, scaledHeight, width, height,
+    renderObject
+ }: { scaledWidth: number, scaledHeight: number, width: number, height: number, renderObject: {
+    renderingInProgress?: boolean;
+    targetRenderFrame: number;
+    setTargetRenderFrame: (n: number) => void;
+    videoExporter: VideoExporter | null;
+ } }) {
+    const state = useStore((state) => state);
+    const {
+        renderingInProgress,
+        targetRenderFrame,
+        setTargetRenderFrame,
+        videoExporter,
+    } = renderObject;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const blueprintRef = useRef<Blueprint | null>(new Blueprint());
-    const state = useStore(state => state);
 
     function updateDrawing(time: number) {
         const props : GradientRendererProps = {
             time,
             lissajousParams: {
-                a: [state.a, state.a_delta],
-                b: [state.b, state.b_delta],
-                c: [state.c, state.c_delta],
+                a: [state.lissajousParams.a, state.lissajousParams.a_delta],
+                b: [state.lissajousParams.b, state.lissajousParams.b_delta],
+                c: [state.lissajousParams.c, state.lissajousParams.c_delta],
             },
             colors: state.particleColors.map(c => ({ r: c[0], g: c[1], b: c[2] })),
             general: {
@@ -30,7 +47,7 @@ function Canvas({ scaledWidth, scaledHeight, width, height }: { scaledWidth: num
         const { addedAssets, deletedAssetIds, graphId } = gfx.update(blueprint(props));
         assetStore.transaction(addedAssets, deletedAssetIds, graphId);
     }
-
+    const drawingRef = useRef<Drawing | null>(null);
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -44,32 +61,47 @@ function Canvas({ scaledWidth, scaledHeight, width, height }: { scaledWidth: num
         }
 
         const backend = new GPUBackend(gl);
-        const drawing = new Drawing(backend);
+        drawingRef.current = new Drawing(backend);
         const unsubscribe = assetStore.subscribe((store, graphId) => {
             const storeObj = Object.fromEntries(store);
-            drawing.submit(graphId, storeObj);
-            drawing.draw("outputTexture");
+            drawingRef.current.submit(graphId, storeObj);
+            drawingRef.current.draw("outputTexture");
         });
     }, []);
 
-    const time = useRef<number>(Date.now());
+    const anchorTime = useRef<number>(Date.now());
+
+    function getCurrentFrame() {
+        if (renderingInProgress) {
+            return targetRenderFrame;
+        } else {
+            const currentTime = Date.now();
+            const delta = (currentTime - anchorTime.current) / 1000;
+            const framesElapsed = Math.floor(delta * FPS);
+            return framesElapsed % computeTotalFrames(state);
+        }
+    }
+
     useRaf(() => {
-        const now = Date.now();
-        const delta = (now - time.current) / 1000;
-        const framesElapsed = Math.floor(delta * 30);
-        const lifeCycle = 300;
-        const currentTime = (framesElapsed % lifeCycle) / lifeCycle;
+        const currentTime = getCurrentFrame() / computeTotalFrames(state);
         updateDrawing(currentTime);
+        if (renderingInProgress && videoExporter) {
+            const totalFrames = computeTotalFrames(state);
+            const exportCutoffTime = state.exportPerfectLoop ? 1 : (state.exportDuration * FPS) / totalFrames;
+            if (currentTime >= exportCutoffTime) {
+                videoExporter.finishExport();
+            } else {
+                videoExporter.addFrame(drawingRef.current!, getCurrentFrame() / FPS, 1 / FPS, () => setTargetRenderFrame(targetRenderFrame + 1));
+            }
+        }
     }, true)
-
-
 
     return <canvas
         ref={canvasRef}
         width={width}
         height={height}
+        className={renderingInProgress ? styles.boxRendering : ''}
         style={{
-            border: '1px solid var(--gray2)',
             width: `${Math.floor(scaledWidth)}px`,
             height: `${Math.floor(scaledHeight)}px`,
             borderRadius: 'var(--borderRadiusSmall)',

@@ -1,15 +1,14 @@
-import { NumberInput, Button, Icon, CollapsibleSection, ColorInput } from '@mtrifonov-design/pinsandcurves-design';
+import { NumberInput, Button, Icon, CollapsibleSection, ColorInput, Logo } from '@mtrifonov-design/pinsandcurves-design';
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import hexToRgb, { rgbToHex } from './hexToRgb';
 import LissajousSelectButtonGroup from './LissajousPreview';
-import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from '../../graphics/lissajousCurves';
+import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from './lissajousCurves';
 import PresetButton from './PresetButton';
-import presets from '../../graphics/presets';
+import presets from './presets';
 import SwitchableSection from './SwitchableSection';
 import useStore from '../../store/useStore';
 
 export default function Component() {
-
   const state = useStore(store => store);
   const update = useStore(store => store.updateStore);
 
@@ -27,10 +26,10 @@ export default function Component() {
   };
 
   const setPreset = (preset: typeof presets[keyof typeof presets]) => {
-    // update({
-    //   ...preset
-    // });
-    // TODO
+    update({
+      ...preset,
+      particleColors: preset.particleColors.map(c => [c[0] / 255, c[1] / 255, c[2] / 255])
+    });
   }
 
 
@@ -49,14 +48,27 @@ export default function Component() {
         scrollbarColor: 'var(--gray3) var(--gray1)',
       }}
     >
-      <h1 style={{
-        color: 'var(--gray7)',
-        fontWeight: "normal",
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        gap: '1rem',
+
       }}>
-      Liquid Lissajous 
-      </h1>
-      <div>
-        Version 0.1.0.
+        <Logo style={{
+          width: '4rem',
+          height: '4rem',
+        }}
+        color="var(--gray4)"
+        />
+        <span style={{
+          color: 'var(--gray7)',
+          fontWeight: "normal",
+          fontSize: "2.5em",
+        }}>
+          Liquid Lissajous
+        </span>
       </div>
       <hr></hr>
       Pick a preset to get started 
@@ -114,7 +126,7 @@ export default function Component() {
             min={100}
             max={1920 * 2}
             step={10}
-            onChange={c => update({ width: c })}
+            onCommit={c => update({ width: c })}
           />
           <span>x</span>
 
@@ -123,7 +135,7 @@ export default function Component() {
             min={100}
             max={1080 * 2}
             step={10}
-            onChange={c => update({ height: c })}
+            onCommit={c => update({ height: c })}
           />
         </div>
       </label>
@@ -136,9 +148,9 @@ export default function Component() {
         animation speed &nbsp;
         <NumberInput
           initialValue={state.animationSpeed}
-          min={0.1}
-          max={1}
-          step={0.1}
+          min={1}
+          max={5}
+          step={1.5}
           onChange={c => {
             update({ animationSpeed: c })}}
         />
@@ -260,28 +272,16 @@ export default function Component() {
                 gap: "1rem",
               }}>
             <LissajousSelectButtonGroup
-              value={{
-                a: state.a,
-                b: state.b,
-                c: state.c,
-                a_delta: state.a_delta,
-                b_delta: state.b_delta,
-                c_delta: state.c_delta,
-              }}
+              value={state.lissajousParams}
               options={LISSAJOUS_CURVES.map(curve => ({
-                label: `${curve.a}:${curve.b}`,
-                value: curve,
+                label: `${curve.params.a}:${curve.params.b}`,
+                value: curve.params,
+                integral: curve.integral,
               }))}
-              onChange={(params) => {
+              onChange={(params, integral) => {
                 update({
-                  a: params.a,
-                  b: params.b,
-                  c: params.c,
-                  a_delta: params.a_delta,
-                  b_delta: params.b_delta,
-                  c_delta: params.c_delta,
-                  rotateHorizontal: 0,
-                  rotateVertical: 0,
+                  lissajousParams: params,
+                  lissajousIntegral: integral,
                  });
               }}
           

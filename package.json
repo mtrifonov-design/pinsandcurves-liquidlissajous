@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@mtrifonov-design/pinsandcurves-design": "^0.0.36",
-    "pinsandcurves-engine": "^0.0.0",
+    "mediabunny": "^1.25.0",
+    "pinsandcurves-engine": "^0.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "vite-plugin-glsl": "^1.5.4",

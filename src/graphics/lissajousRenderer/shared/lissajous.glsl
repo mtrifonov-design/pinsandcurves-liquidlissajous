@@ -22,7 +22,8 @@ vec3 lissajous(
     // float z = 0.; // t * 2. - 1.;
     //vec3 rotated = rotAroundY * vec3(x, y, z);
     vec3 rotated = vec3(x,y,z);
-    vec3 scale = vec3(1./sqrt(3.)) * vec3(0.6,0.9,1.);
-    float aspect = resolution.x / resolution.y;
-    return rotated * scale; // * vec3(aspect,1.,1.);
+    //vec3 scale = vec3(1./sqrt(3.)) * vec3(0.6,0.9,1.);
+    vec3 scale = vec3(1./sqrt(3.)) * vec3(0.75,0.75,1.);
+    float aspect = resolution.y / resolution.x;
+    return rotated * scale * vec3(aspect,1.,1.);
 }
