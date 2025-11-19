@@ -133,4 +133,4 @@ function main2(input: number) {
 
 export type { GradientRendererProps };
 
-export default main2;
+export default main;

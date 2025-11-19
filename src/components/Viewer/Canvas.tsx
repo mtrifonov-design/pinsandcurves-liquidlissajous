@@ -3,64 +3,31 @@ import AssetStore from '../../AssetStore';
 import { useRef, useEffect } from 'react';
 import useRaf from './useRaf';
 import blueprint from '../../graphics/lissajousRenderer/blueprint';
+import type { GradientRendererProps } from '../../graphics/lissajousRenderer/blueprint';
+import useStore from '../../store/useStore';
 
 const assetStore = new AssetStore();
 
-function helloWorld(height: number) {
-    const triangle = Vertices(
-        {
-            attributes: {
-                pos: 'vec2',
-                uv: 'vec2',
-            }
-        }, 
-        {
-            triangleCount: 1,
-            vertices: () => ([
-                { pos: [-1,-1],      uv: [0,0] },
-                { pos: [0,height],  uv: [0,1] },
-                { pos: [1,-1],       uv: [1,0] }
-            ]),
-            indices: () => ([0, 1, 2,])
-        }, 
-        [height]
-    );
-    const outputTexture = Texture(
-        {
-            width: 1920,
-            height: 1080,
-        }, 
-        [
-            DrawOp(
-                triangle,
-                () => `
-                out vec2 v_uv;
-                void main() {
-                    gl_Position = vec4(pos,0.,1.);
-                    v_uv = uv;
-                }
-                `,
-                () => `
-                in vec2 v_uv;
-                void main() {
-                    outColor = vec4(v_uv, 1.0, 1.0);
-                }`
-            )
-        ], 
-        []
-    );
-    return { triangle, outputTexture };
-}
-
 function Canvas({ scaledWidth, scaledHeight, width, height }: { scaledWidth: number, scaledHeight: number, width: number, height: number }) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
     const blueprintRef = useRef<Blueprint | null>(new Blueprint());
+    const state = useStore(state => state);
 
-    function updateDrawing(inputValue: number) {
+    function updateDrawing(time: number) {
+        const props : GradientRendererProps = {
+            time,
+            lissajousParams: {
+                a: [state.a, state.a_delta],
+                b: [state.b, state.b_delta],
+                c: [state.c, state.c_delta],
+            },
+            colors: state.particleColors.map(c => ({ r: c[0], g: c[1], b: c[2] })),
+            general: {
+                canvasDimensions: [width, height],
+            }
+        };
         const gfx = blueprintRef.current!;
-        //console.log(inputValue);
-        const { addedAssets, deletedAssetIds, graphId } = gfx.update(blueprint(inputValue));
+        const { addedAssets, deletedAssetIds, graphId } = gfx.update(blueprint(props));
         assetStore.transaction(addedAssets, deletedAssetIds, graphId);
     }
 
@@ -91,8 +58,8 @@ function Canvas({ scaledWidth, scaledHeight, width, height }: { scaledWidth: num
         const delta = (now - time.current) / 1000;
         const framesElapsed = Math.floor(delta * 30);
         const lifeCycle = 300;
-        const input = (framesElapsed % lifeCycle) / lifeCycle;
-        updateDrawing(input);
+        const currentTime = (framesElapsed % lifeCycle) / lifeCycle;
+        updateDrawing(currentTime);
     }, true)
 
 
