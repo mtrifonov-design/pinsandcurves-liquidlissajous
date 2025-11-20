@@ -4,6 +4,8 @@ import DrawLissajousCurve from "./DrawLissajousCurve/main.ts";
 import DrawPoints from "./DrawPoints/main.ts";
 import sharedInputs from "./sharedInputs/main.ts";
 import SampleDepthTexture from "./SampleDepthTexture/main.ts";
+import copyTexture from '../utils/copyTexture.ts';
+import DrawNoise from './DrawNoise/main.ts';
 
 type GradientRendererProps = {
   colors: { r: number; g: number; b: number }[];
@@ -14,9 +16,12 @@ type GradientRendererProps = {
     c: [number, number];
   };
   mixingIntensity: number;
+  noiseIntensity: number;
+  enableNoise: boolean;
   xyRotation: [number, number];
   general: {
     canvasDimensions: [number, number];
+    showLissajousFigure: boolean;
   }
 }
 
@@ -64,8 +69,12 @@ const defaultProps: GradientRendererProps = {
   },
   mixingIntensity: 0.5,
   xyRotation: [0.0, 0.0],
+  noiseIntensity: 0.2,
+  enableNoise: true,
   general: {
     canvasDimensions: [800, 600],
+    showLissajousFigure: true,
+
   }
 }
 
@@ -107,46 +116,37 @@ function main(props: GradientRendererProps) {
     displayUniforms: shared_inputs.display_uniforms,
   })
 
-  const renderTexture = Texture({
+  const gradientTexture = Texture({
     width: props.general.canvasDimensions[0],
     height: props.general.canvasDimensions[1],
   }, [
     drawGradient.data.draw,
   ], [props.general.canvasDimensions[0], props.general.canvasDimensions[1]]);
 
-  const outputTexture = Texture({
+  const drawNoise = DrawNoise({
+    quad: shared_inputs.quad,
+    texture: gradientTexture,
+    lissajousUniforms: shared_inputs.lissajous_uniforms,
+    displayUniforms: shared_inputs.display_uniforms,
+  })
+
+  const renderTexture = Texture({
     width: props.general.canvasDimensions[0],
     height: props.general.canvasDimensions[1],
   }, [
-    DrawOp(
-      shared_inputs.quad,
-      () => `
-      out vec2 v_uv;
-      void main() {
-        gl_Position = vec4(position, 0.0, 1.0);
-        v_uv = vec2(u,v);
-      }`,
-      () => `
-      in vec2 v_uv;
-      void main() {
-        vec4 color = texture(src, v_uv);
-        outColor = color;
-      }`,
-      {
-        uniforms: {},
-        textures: {
-          src: {
-            sampler: {
-              edge: 'clamp',
-              filter: 'linear',
-            },
-            texture: renderTexture,
-          },
-        },
-      }),
+    drawNoise.data.draw,
+  ], [props.general.canvasDimensions[0], props.general.canvasDimensions[1]]);
+
+  const outputTexture = Texture({
+    width: props.general.canvasDimensions[0],
+    height: props.general.canvasDimensions[1],
+  }, props.general.showLissajousFigure ? [
+    copyTexture(shared_inputs.quad, renderTexture),
     drawLissajousCurve.data.draw,
     drawPoints.data.draw,
-  ], [props.general.canvasDimensions[0], props.general.canvasDimensions[1]]);
+  ] : [
+    copyTexture(shared_inputs.quad, renderTexture)
+  ], [props.general.canvasDimensions[0], props.general.canvasDimensions[1], props.general.showLissajousFigure]);
   return {
     //outputTexture,
     shared_inputs,
@@ -156,6 +156,7 @@ function main(props: GradientRendererProps) {
     sampleDepthTex,
     outputTexture,
     renderTexture,
+    gradientTexture,
 
     //outputTexture: sampleDepthTex.texture,
   }

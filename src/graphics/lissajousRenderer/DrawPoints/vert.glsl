@@ -25,7 +25,7 @@ void main() {
         resolution
     );
     float aspect = resolution.x / resolution.y;
-    vec3 finalPoint = vec3(position* vec2(0.025) * vec2(1.,aspect), 0.)  + point;
+    vec3 finalPoint = vec3(position* vec2(0.02) * vec2(1.,aspect), 0.)  + point;
         depth = smoothstep(-0.4,0.4,finalPoint.z);
     finalPoint.z -= 0.15;
 

@@ -15,11 +15,12 @@ function main(props: GradientRendererProps) {
         lissajous_a: 'vec2',
         lissajous_b: 'vec2',
         lissajous_c: 'vec2',
+        xyRotation: 'vec2',
         numParticles: 'int',
         numMaxParticles: 'int',
         time: 'float',
         mixingIntensity: 'float',
-        xyRotation: 'vec2',
+        noiseIntensity: 'float',
     }, () => {
         return {
             numParticles: props.colors.length,
@@ -30,6 +31,7 @@ function main(props: GradientRendererProps) {
             lissajous_c: props.lissajousParams.c,
             mixingIntensity: props.mixingIntensity,
             xyRotation: props.xyRotation,
+            noiseIntensity: props.noiseIntensity,
         }
     }, [props.colors.length, props.time, props.lissajousParams.a, props.lissajousParams.b, props.lissajousParams.c]);
 

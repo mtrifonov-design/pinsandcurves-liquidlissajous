@@ -34,7 +34,7 @@ void main() {
         cos(angle), sin(angle),
         -sin(angle), cos(angle)
     );
-    vec2 scaledPosition = position * vec2(0.01,0.01);
+    vec2 scaledPosition = position * vec2(0.007,0.007);
     vec2 rotatedPosition = rot * scaledPosition;
     vec3 pos = vec3(rotatedPosition, 0.)  + translation;
     gl_Position = vec4(pos, 1.0);

@@ -41,9 +41,12 @@ function Canvas({ scaledWidth, scaledHeight, width, height,
             colors: state.particleColors.map(c => ({ r: c[0], g: c[1], b: c[2] })),
             general: {
                 canvasDimensions: [width, height],
+                showLissajousFigure: state.showLissajousFigure,
             },
             mixingIntensity: 1-state.mixingIntensity,
             xyRotation: [state.rotateHorizontal / 360, state.rotateVertical / 360],
+            enableNoise : state.noiseEnabled,
+            noiseIntensity : state.noiseIntensity,
         };
         const gfx = blueprintRef.current!;
         const { addedAssets, deletedAssetIds, graphId } = gfx.update(blueprint(props));
