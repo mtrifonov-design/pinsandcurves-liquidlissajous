@@ -13,6 +13,8 @@ type GradientRendererProps = {
     b: [number, number];
     c: [number, number];
   };
+  mixingIntensity: number;
+  xyRotation: [number, number];
   general: {
     canvasDimensions: [number, number];
   }
@@ -37,10 +39,10 @@ const defaultProps: GradientRendererProps = {
     // { r: 0, g: 1, b: 1 },
     // { r: 1, g: 0, b: 1 },
 
-    { r: Math.pow(24/255,1.5), g: Math.pow(0,1.5), b: Math.pow(97/255,1.5) },
-    { r: Math.pow(79/255,1.5), g: Math.pow(23/255,1.5), b: Math.pow(135/255,1.5) },
-    { r: Math.pow(235/255,1.5), g: Math.pow(52/255,1.5), b: Math.pow(120/255,1.5) },
-    { r: Math.pow(235/255,1.5), g: Math.pow(119/255,1.5), b: Math.pow(60/255,1.5) },
+    { r: Math.pow(24 / 255, 1.5), g: Math.pow(0, 1.5), b: Math.pow(97 / 255, 1.5) },
+    { r: Math.pow(79 / 255, 1.5), g: Math.pow(23 / 255, 1.5), b: Math.pow(135 / 255, 1.5) },
+    { r: Math.pow(235 / 255, 1.5), g: Math.pow(52 / 255, 1.5), b: Math.pow(120 / 255, 1.5) },
+    { r: Math.pow(235 / 255, 1.5), g: Math.pow(119 / 255, 1.5), b: Math.pow(60 / 255, 1.5) },
   ],
   time: 0,
   lissajousParams: {
@@ -60,6 +62,8 @@ const defaultProps: GradientRendererProps = {
     // b: [1, 0.4],
     // c: [1, 1.0],
   },
+  mixingIntensity: 0.5,
+  xyRotation: [0.0, 0.0],
   general: {
     canvasDimensions: [800, 600],
   }
@@ -103,11 +107,43 @@ function main(props: GradientRendererProps) {
     displayUniforms: shared_inputs.display_uniforms,
   })
 
-  const outputTexture = Texture({
+  const renderTexture = Texture({
     width: props.general.canvasDimensions[0],
     height: props.general.canvasDimensions[1],
   }, [
     drawGradient.data.draw,
+  ], [props.general.canvasDimensions[0], props.general.canvasDimensions[1]]);
+
+  const outputTexture = Texture({
+    width: props.general.canvasDimensions[0],
+    height: props.general.canvasDimensions[1],
+  }, [
+    DrawOp(
+      shared_inputs.quad,
+      () => `
+      out vec2 v_uv;
+      void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+        v_uv = vec2(u,v);
+      }`,
+      () => `
+      in vec2 v_uv;
+      void main() {
+        vec4 color = texture(src, v_uv);
+        outColor = color;
+      }`,
+      {
+        uniforms: {},
+        textures: {
+          src: {
+            sampler: {
+              edge: 'clamp',
+              filter: 'linear',
+            },
+            texture: renderTexture,
+          },
+        },
+      }),
     drawLissajousCurve.data.draw,
     drawPoints.data.draw,
   ], [props.general.canvasDimensions[0], props.general.canvasDimensions[1]]);
@@ -119,7 +155,8 @@ function main(props: GradientRendererProps) {
     drawPoints,
     sampleDepthTex,
     outputTexture,
-    
+    renderTexture,
+
     //outputTexture: sampleDepthTex.texture,
   }
 }

@@ -40,7 +40,7 @@ class VideoExporter {
             console.error("VideoExporter: output or canvas not initialized");
             return;
         }
-        const pixels = drawing.capture("outputTexture");
+        const pixels = drawing.capture("renderTexture");
         const width = this.canvas.width;
         const height = this.canvas.height;
         const ctx = this.canvas.getContext("2d");
