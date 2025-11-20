@@ -16,6 +16,7 @@ function Component() {
     const totalFrames = computeTotalFrames(state);
     const exportDurationFactor = state.exportPerfectLoop ? 1 : (state.exportDuration * FPS) / totalFrames;
     const approxRenderProgress = renderingInProgress ? (targetRenderFrame / totalFrames) / exportDurationFactor : 0;
+    const screenshotRef = useRef(null);
 
     const w = useStore((state) => state.width);
     const h = useStore((state) => state.height);
@@ -59,8 +60,24 @@ function Component() {
         }}>
             <Button
                 onClick={async () => {
-                    //recordEvent({ path: "liquidlissajous-saveframe", event: true });
-                    //frameSaver.saveFrame();
+                    screenshotRef.current!.takeScreenshot();
+                }}
+                text={"export frame"}
+                iconName="camera"
+            />
+            {/* <Button
+                onClick={async () => {
+                    // recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                    // setDisplayOverlay(true);
+
+                }}
+                text={"export image sequence"}
+                iconName="animated_images"
+            /> */}
+            {true && <Button
+                onClick={async () => {
+                    // recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                    // setDisplayOverlay(true);
                     setState({ renderingInProgress: true });
                     const exporter = new VideoExporter(() => {
                         setState({ renderingInProgress: false });
@@ -72,23 +89,6 @@ function Component() {
                         width: w,
                         height: h,
                     });
-                }}
-                text={"export frame"}
-                iconName="camera"
-            />
-            <Button
-                onClick={async () => {
-                    // recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                    // setDisplayOverlay(true);
-
-                }}
-                text={"export image sequence"}
-                iconName="animated_images"
-            />
-            {true && <Button
-                onClick={async () => {
-                    // recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                    // setDisplayOverlay(true);
                 }}
                 text={"export as .mp4"}
                 iconName="movie"
@@ -119,6 +119,7 @@ function Component() {
                         videoExporter,
                     }
                 }
+                screenshotRef={screenshotRef}
             />
             {renderingInProgress && <div style={{
                     color: 'var(--danger)',

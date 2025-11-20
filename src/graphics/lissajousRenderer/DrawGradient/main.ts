@@ -44,7 +44,8 @@ function main({
             }
         },
         {
-            blendMode: "alpha"
+            // blending: false,
+            // blendMode: "alpha"
         }
     )
     return { 

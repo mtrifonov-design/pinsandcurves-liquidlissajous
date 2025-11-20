@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import type { LissajousParams } from "../components/Controls/lissajousCurves";
+import { LISSAJOUS_CURVES, type LissajousParams } from "../components/Controls/lissajousCurves";
+import presets from "../components/Controls/presets";
 
 type StoreState = {
     mixingIntensity: number; 
@@ -23,24 +24,24 @@ type StoreState = {
 }
 
 const useStore = create<StoreState>((set) => ({
-    mixingIntensity: 0,
-    particleColors: [[0, 0, 0]],
-    showLissajousFigure: false,
-    lissajousParams: {
-        a: 1, a_delta: 0,
-        b: 1, b_delta: 0,
-        c: 1, c_delta: 0,
-    },
-    lissajousIntegral: 1,
-    width: 800,
-    height: 600,
-    noiseIntensity: 0,
-    noiseEnabled: false,
-    animationSpeed: 0,
-    rotateVertical: 0,
-    rotateHorizontal: 0,
+
+    ...presets[1],
+
+
+    // mixingIntensity: 0,
+    // particleColors: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+    // showLissajousFigure: false,
+    // lissajousParams: LISSAJOUS_CURVES[0].params,
+    // lissajousIntegral: LISSAJOUS_CURVES[0].integral,
+    width: 800 * 3,
+    height: 600 * 3,
+    // noiseIntensity: 0,
+    // noiseEnabled: false,
+    // animationSpeed: 1.5,
+    // rotateVertical: 0,
+    // rotateHorizontal: 0,
     exportPerfectLoop: false,
-    exportDuration: 0,
+    exportDuration: 3,
 
     renderingInProgress: false,
 

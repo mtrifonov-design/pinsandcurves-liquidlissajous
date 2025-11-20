@@ -1,4 +1,4 @@
-import { BufferTarget, CanvasSource, Mp4OutputFormat, Output, QUALITY_MEDIUM } from 'mediabunny';
+import { BufferTarget, CanvasSource, Mp4OutputFormat, Output, QUALITY_MEDIUM, QUALITY_HIGH } from 'mediabunny';
 import { Drawing } from 'pinsandcurves-engine';
 
 
@@ -24,7 +24,7 @@ class VideoExporter {
         this.canvas.height = props.height;
         this.canvasSource = new CanvasSource(this.canvas, {
             codec: 'avc',
-            bitrate: QUALITY_MEDIUM,
+            bitrate: QUALITY_HIGH,
         });
         this.output.addVideoTrack(this.canvasSource);
         await this.output.start();

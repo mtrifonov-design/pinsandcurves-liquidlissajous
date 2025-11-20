@@ -1,6 +1,6 @@
-import { Drawing, GPUBackend, Blueprint, DrawOp, Instances, Texture, Uniforms, Vertices} from 'pinsandcurves-engine';
+import { Drawing, GPUBackend, Blueprint, DrawOp, Instances, Texture, Uniforms, Vertices } from 'pinsandcurves-engine';
 import AssetStore from '../../AssetStore';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useImperativeHandle } from 'react';
 import useRaf from './useRaf';
 import blueprint from '../../graphics/lissajousRenderer/blueprint';
 import type { GradientRendererProps } from '../../graphics/lissajousRenderer/blueprint';
@@ -13,13 +13,18 @@ import { FPS } from '../../const';
 const assetStore = new AssetStore();
 
 function Canvas({ scaledWidth, scaledHeight, width, height,
-    renderObject
- }: { scaledWidth: number, scaledHeight: number, width: number, height: number, renderObject: {
-    renderingInProgress?: boolean;
-    targetRenderFrame: number;
-    setTargetRenderFrame: (n: number) => void;
-    videoExporter: VideoExporter | null;
- } }) {
+    renderObject,
+    screenshotRef
+}: {
+    scaledWidth: number, scaledHeight: number, width: number, height: number, renderObject: {
+        renderingInProgress?: boolean;
+        targetRenderFrame: number;
+        setTargetRenderFrame: (n: number) => void;
+        videoExporter: VideoExporter | null;
+
+    },
+    screenshotRef: React.RefObject;
+}) {
     const state = useStore((state) => state);
     const {
         renderingInProgress,
@@ -30,8 +35,35 @@ function Canvas({ scaledWidth, scaledHeight, width, height,
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const blueprintRef = useRef<Blueprint | null>(new Blueprint());
 
+    useImperativeHandle(screenshotRef, () => {
+        return {
+            takeScreenshot: () => {
+                if (!drawingRef.current) {
+                    console.error("Drawing not initialized yet");
+                    return;
+                }
+                const drawing = drawingRef.current;
+                const pixels = drawing.capture("renderTexture");
+                const width = state.width;
+                const height = state.height;
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) throw new Error("Unable to create 2D context for image saving");
+                const imageData = ctx.createImageData(width, height);
+                imageData.data.set(pixels);
+                ctx.putImageData(imageData, 0, 0);
+                const link = document.createElement("a");
+                link.download = 'frame.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+    })
+
     function updateDrawing(time: number) {
-        const props : GradientRendererProps = {
+        const props: GradientRendererProps = {
             time,
             lissajousParams: {
                 a: [state.lissajousParams.a, state.lissajousParams.a_delta],
@@ -43,10 +75,10 @@ function Canvas({ scaledWidth, scaledHeight, width, height,
                 canvasDimensions: [width, height],
                 showLissajousFigure: state.showLissajousFigure,
             },
-            mixingIntensity: 1-state.mixingIntensity,
+            mixingIntensity: 1 - state.mixingIntensity,
             xyRotation: [state.rotateHorizontal / 360, state.rotateVertical / 360],
-            enableNoise : state.noiseEnabled,
-            noiseIntensity : state.noiseIntensity,
+            enableNoise: state.noiseEnabled,
+            noiseIntensity: state.noiseIntensity,
         };
         const gfx = blueprintRef.current!;
         const { addedAssets, deletedAssetIds, graphId } = gfx.update(blueprint(props));
