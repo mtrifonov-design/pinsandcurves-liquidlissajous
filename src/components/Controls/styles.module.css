@@ -1,0 +1,9 @@
+
+
+.hoverLink {
+  color: var(--gray4);
+}
+
+.hoverLink:hover {
+  color: var(--gray6);
+}
