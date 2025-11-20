@@ -25,16 +25,31 @@ type StoreState = {
 
 const useStore = create<StoreState>((set) => ({
 
-    ...presets[1],
+    particleColors: [
+        [59, 6, 10],
+        [138, 0, 0],
+        [200, 63, 18],
+        [255, 242, 135],
+    ].map(c => c.map(v => v / 255) as [number, number, number]),
+    mixingIntensity: 0.6,
+    width: 1920,
+    height: 1080,
+    noiseEnabled: true,
+    noiseIntensity: 0.65,
+    lissajousParams: LISSAJOUS_CURVES[1].params,
+    lissajousIntegral: LISSAJOUS_CURVES[1].integral,
+    animationSpeed: 1.5,
+    rotateVertical: 0,
+    rotateHorizontal: 138,
 
 
     // mixingIntensity: 0,
     // particleColors: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-    // showLissajousFigure: false,
+    showLissajousFigure: false,
     // lissajousParams: LISSAJOUS_CURVES[0].params,
     // lissajousIntegral: LISSAJOUS_CURVES[0].integral,
-    width: 800 * 3,
-    height: 600 * 3,
+    // width: 800 * 3,
+    // height: 600 * 3,
     // noiseIntensity: 0,
     // noiseEnabled: false,
     // animationSpeed: 1.5,
